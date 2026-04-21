@@ -216,22 +216,31 @@
     return Object.values(fields).map(validateField).every(Boolean);
   }
 
+  // Handler en fase de captura: se ejecuta ANTES que el del embed del CRM.
+  // Si la validaci\u00f3n falla, detenemos propagaci\u00f3n para que el CRM no registre env\u00edos inv\u00e1lidos.
+  // Si pasa, actualizamos el campo oculto phone con el prefijo +56 y dejamos que el embed contin\u00fae.
   form.addEventListener('submit', e => {
-    e.preventDefault();
     successMsg.classList.remove('show');
 
-    if (!validateAll()) return;
+    if (!validateAll()) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return;
+    }
 
-    // Recoger valores del formulario
+    // Recoger valores
     const nombre   = fields.nombre.el.value.trim();
     const email    = fields.email.el.value.trim();
     const whatsapp = fields.whatsapp.el.value.trim();
     const mensaje  = fields.mensaje.el.value.trim();
 
-    // Número del gimnasio — reemplaza XXXXXXXXX por el número real (sin +)
+    // Actualizar el campo oculto con el tel\u00e9fono completo (incluye +56) para el CRM
+    const crmPhone = document.getElementById('crm_phone');
+    if (crmPhone) crmPhone.value = `+56${whatsapp}`;
+
+    // N\u00famero del gimnasio
     const NUMERO_GIMNASIO = '56900000000';
 
-    // Construir el mensaje con el formato solicitado
     const texto =
       `Hola, me interesa el entrenamiento:\n` +
       `Nombre: ${nombre}\n` +
@@ -241,17 +250,14 @@
 
     const waURL = `https://wa.me/${NUMERO_GIMNASIO}?text=${encodeURIComponent(texto)}`;
 
-    // Animación breve y luego abrir WhatsApp
+    // Animaci\u00f3n breve y luego abrir WhatsApp.
+    // En paralelo, el embed del CRM intercepta este submit y registra el contacto.
     const btn = form.querySelector('button[type="submit"]');
-    btn.textContent = 'ABRIENDO WHATSAPP...';
+    const originalText = btn.textContent;
     btn.disabled = true;
 
     setTimeout(() => {
       window.open(waURL, '_blank', 'noopener,noreferrer');
-
-      btn.textContent = 'ENVIAR MENSAJE';
-      btn.disabled = false;
-      form.reset();
 
       // Limpiar estados de error
       Object.values(fields).forEach(f => {
@@ -261,10 +267,12 @@
         if (wrap) wrap.classList.remove('invalid');
       });
 
+      btn.textContent = originalText;
+      btn.disabled = false;
       successMsg.classList.add('show');
       setTimeout(() => successMsg.classList.remove('show'), 6000);
     }, 600);
-  });
+  }, true);
 })();
 
 

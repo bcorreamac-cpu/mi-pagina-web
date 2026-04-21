@@ -169,7 +169,9 @@
         </div>
       </div>
 
-      <form class="contact-form" id="contactForm" novalidate>
+      <form class="contact-form" id="contactForm" data-crm-form novalidate>
+        <!-- Campo oculto con el tel\u00e9fono completo (incluye prefijo +56) para el CRM -->
+        <input type="hidden" name="phone" id="crm_phone">
         <div class="form-group">
           <label for="nombre">NOMBRE COMPLETO</label>
           <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required />
@@ -249,5 +251,11 @@
   </a>
 
   <script src="script.js"></script>
+
+  <!-- CRM: Mi-CRM embed. Cambiar URL a la de producci\u00f3n cuando deployemos. -->
+  <script
+    src="http://localhost:3000/embed.js"
+    data-crm-site="2928a18e8dd00311dc97138cd183845f"
+    defer></script>
 </body>
 </html>
